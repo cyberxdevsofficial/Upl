@@ -12,222 +12,170 @@
     --dark:#060612;
 }
 
-*{
-    box-sizing:border-box;
-    margin:0;
-    padding:0;
-}
-
-html, body{
-    width:100%;
-    height:100%;
-    font-family:'Orbitron',sans-serif;
-}
-
+/* Global */
+*{box-sizing:border-box;margin:0;padding:0;}
 body{
+    font-family:'Orbitron',sans-serif;
+    min-height:100vh;
     display:flex;
     justify-content:center;
     align-items:center;
-    background:radial-gradient(circle at 30% 30%,#101030,#060612 70%);
-    overflow-x:hidden;
+    background:#060612;
+    perspective:1200px;
+    overflow:hidden;
     color:white;
     position:relative;
 }
 
-/* Animated Glow Background */
-body::before, body::after{
-    content:"";
+/* 3D Moving Particles Background */
+.scene{
     position:absolute;
-    width:500px;
-    height:500px;
-    border-radius:50%;
-    filter:blur(120px);
-    animation:float 14s infinite alternate ease-in-out;
-}
-body::before{
-    background:#00f0ff;
-    top:-100px;
-    left:-100px;
-}
-body::after{
-    background:#ff00f7;
-    bottom:-100px;
-    right:-100px;
-}
-@keyframes float{
-    from{transform:translate(0,0);}
-    to{transform:translate(120px,80px);}
+    width:200%;
+    height:200%;
+    top:-50%;
+    left:-50%;
+    transform-style:preserve-3d;
+    animation:rotateScene 60s linear infinite;
+    background:radial-gradient(circle at 30% 30%,#101030,#060612 70%);
+    overflow:hidden;
+    z-index:1;
 }
 
-/* Container */
+.particle{
+    position:absolute;
+    width:4px;
+    height:4px;
+    background:linear-gradient(45deg,var(--primary),var(--secondary));
+    border-radius:50%;
+    box-shadow:0 0 15px var(--primary),0 0 20px var(--secondary);
+    animation:float 20s infinite alternate ease-in-out;
+}
+
+@keyframes rotateScene{
+    0%{transform:rotateX(0deg) rotateY(0deg);}
+    100%{transform:rotateX(360deg) rotateY(360deg);}
+}
+@keyframes float{
+    from{transform:translate3d(0,0,0);}
+    to{transform:translate3d(200px,150px,50px);}
+}
+
+/* Glass Container */
 .container{
     position:relative;
     z-index:10;
-    width:clamp(280px, 90%, 480px);
-    padding:clamp(20px, 4vw, 40px);
+    width:90%;
+    max-width:480px;
+    padding:30px 20px;
     border-radius:25px;
-    backdrop-filter:blur(25px);
+    backdrop-filter:blur(30px);
     background:rgba(255,255,255,0.05);
     border:1px solid rgba(255,255,255,0.2);
-    box-shadow:0 0 40px rgba(0,240,255,0.3);
+    box-shadow:0 0 60px rgba(0,240,255,0.4);
     text-align:center;
     display:flex;
     flex-direction:column;
     align-items:center;
     animation:fadeIn 1s ease forwards;
 }
+@keyframes fadeIn{from{opacity:0;transform:translateY(30px);}to{opacity:1;transform:translateY(0);}}
 
-@keyframes fadeIn{
-    from{opacity:0;transform:translateY(30px);}
-    to{opacity:1;transform:translateY(0);}
-}
-
-/* Titles */
+/* Header */
 h1{
-    font-size:clamp(20px,5vw,28px);
+    font-size:28px;
     background:linear-gradient(90deg,var(--primary),var(--secondary));
     -webkit-background-clip:text;
     -webkit-text-fill-color:transparent;
     font-weight:900;
     letter-spacing:3px;
-    margin-bottom:0.3em;
+    margin-bottom:8px;
 }
+.subtitle{font-size:13px;margin-bottom:20px;color:#aaa;}
 
-.subtitle{
-    font-size:clamp(10px,3vw,14px);
-    margin-bottom:1em;
-    color:#aaa;
-}
-
-/* Upload Zone */
+/* Upload Box */
 input[type=file]{display:none;}
-
 .upload-zone{
     width:100%;
-    min-height:100px;
+    min-height:120px;
     border:2px dashed rgba(255,255,255,0.6);
-    border-radius:18px;
+    border-radius:20px;
     cursor:pointer;
-    transition:0.3s;
+    transition:0.4s;
     background:linear-gradient(145deg, rgba(0,240,255,0.15), rgba(255,0,247,0.15));
     display:flex;
     align-items:center;
     justify-content:center;
     margin-bottom:20px;
-    padding:clamp(15px,2vw,25px);
+    padding:20px;
     text-align:center;
-    box-shadow:inset 0 0 15px rgba(255,255,255,0.08), 0 0 25px rgba(0,240,255,0.4);
-    word-break:break-word;
+    box-shadow:inset 0 0 15px rgba(255,255,255,0.08), 0 0 35px rgba(0,240,255,0.4);
 }
-
 .upload-zone:hover{
-    transform:scale(1.03);
-    box-shadow:0 0 35px #00f0ff,0 0 50px #ff00f7;
+    transform:scale(1.05) rotateX(3deg) rotateY(3deg);
+    box-shadow:0 0 45px #00f0ff,0 0 60px #ff00f7;
 }
-
-.file-name{
-    font-size:clamp(12px,2.5vw,14px);
-}
+.file-name{font-size:14px;word-break:break-word;}
 
 /* Button */
 button{
     width:100%;
-    padding:clamp(10px,2vw,16px);
+    padding:16px;
     border:none;
-    border-radius:12px;
+    border-radius:14px;
     font-weight:700;
     letter-spacing:2px;
     cursor:pointer;
     background:linear-gradient(90deg,var(--primary),var(--secondary));
     color:black;
-    transition:0.3s;
+    transition:0.4s;
     margin-bottom:10px;
 }
-
-button:hover{
-    transform:translateY(-3px);
-    box-shadow:0 10px 25px var(--primary);
-}
-
-button:disabled{
-    opacity:0.5;
-    cursor:not-allowed;
-}
+button:hover{transform:translateY(-3px);box-shadow:0 10px 30px var(--primary);}
+button:disabled{opacity:0.5;cursor:not-allowed;}
 
 /* Progress */
-.progress-wrapper{
-    display:none;
-    margin-top:10px;
-    width:100%;
-}
-.progress-track{
-    width:100%;
-    height:8px;
-    background:rgba(255,255,255,0.1);
-    border-radius:10px;
-}
-.progress-fill{
-    height:100%;
-    width:0%;
-    border-radius:10px;
-    background:linear-gradient(90deg,var(--primary),var(--secondary));
-    transition:0.3s;
-}
-
-#progressPercent{
-    font-size:12px;
-    margin-top:5px;
-    text-align:right;
-}
+.progress-wrapper{display:none;margin-top:10px;width:100%;}
+.progress-track{width:100%;height:8px;background:rgba(255,255,255,0.1);border-radius:10px;}
+.progress-fill{height:100%;width:0%;border-radius:10px;background:linear-gradient(90deg,var(--primary),var(--secondary));transition:0.3s;}
+#progressPercent{font-size:12px;margin-top:5px;text-align:right;}
 
 /* Result */
-#result{
-    margin-top:15px;
-    width:100%;
-}
+#result{margin-top:15px;width:100%;}
+.url-box{display:flex;margin-top:10px;background:rgba(0,0,0,0.6);padding:8px;border-radius:8px;gap:5px;}
+.url-box input{flex:1;background:none;border:none;color:white;outline:none;font-size:12px;}
+.copy-btn{padding:6px 12px;border-radius:6px;font-size:11px;background:#00f0ff;color:black;border:none;cursor:pointer;}
 
-.url-box{
-    display:flex;
-    margin-top:10px;
-    background:rgba(0,0,0,0.6);
-    padding:8px;
-    border-radius:8px;
-    gap:5px;
-}
-.url-box input{
-    flex:1;
-    background:none;
-    border:none;
-    color:white;
-    outline:none;
-    font-size:12px;
-}
-.copy-btn{
-    padding:6px 12px;
-    border-radius:6px;
-    font-size:11px;
-    background:#00f0ff;
-    color:black;
-    border:none;
-    cursor:pointer;
-}
-
-/* Fully responsive tweaks */
-@media(max-width:768px){
-    .container{padding:20px 15px;}
-    .upload-zone{min-height:80px;}
-}
-
-@media(max-width:480px){
-    h1{letter-spacing:1.5px;}
-    .subtitle{margin-bottom:10px;}
-    .upload-zone{min-height:70px; padding:15px;}
+/* Responsive */
+@media (max-width:600px){
+    h1{font-size:22px; letter-spacing:2px;}
+    .subtitle{font-size:11px;margin-bottom:15px;}
+    .upload-zone{min-height:80px;padding:15px;}
     button{padding:12px;}
+}
+@media (min-width:1600px){
+    .container{max-width:600px;padding:40px 30px;}
+    .upload-zone{min-height:160px;}
 }
 </style>
 </head>
-
 <body>
+
+<div class="scene" id="scene">
+    <!-- Generate 50 particles -->
+    <script>
+        for(let i=0;i<50;i++){
+            const p=document.createElement("div");
+            p.className="particle";
+            p.style.top=Math.random()*200+"%";
+            p.style.left=Math.random()*200+"%";
+            p.style.width=(2+Math.random()*4)+"px";
+            p.style.height=p.style.width;
+            p.style.animationDuration=(15+Math.random()*20)+"s";
+            document.body.appendChild(p);
+        }
+    </script>
+</div>
+
 <div class="container">
     <h1>ANUGA UPLOADER</h1>
     <p class="subtitle">Premium 3D Media CDN</p>
@@ -240,9 +188,7 @@ button:disabled{
     <button id="uploadBtn" disabled>UPLOAD MEDIA</button>
 
     <div class="progress-wrapper" id="progressWrapper">
-        <div class="progress-track">
-            <div class="progress-fill" id="progressFill"></div>
-        </div>
+        <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
         <div id="progressPercent">0%</div>
     </div>
 
@@ -280,7 +226,6 @@ function uploadFile(){
     progressWrapper.style.display="block";
 
     const xhr=new XMLHttpRequest();
-
     xhr.upload.addEventListener("progress",(e)=>{
         if(e.lengthComputable){
             const percent=Math.round((e.loaded/e.total)*100);
@@ -298,41 +243,32 @@ function uploadFile(){
 
         if(xhr.status===200){
             const data=JSON.parse(xhr.responseText);
-            if(data.success){
-                showResult(data.url);
-            }else{
-                showError("Upload Failed");
-            }
-        }else{
-            showError("Server Error");
-        }
+            if(data.success) showResult(data.url);
+            else showError("Upload Failed");
+        }else showError("Server Error");
     };
-
     xhr.open("POST","/upload",true);
     xhr.send(formData);
 }
 
 function showResult(url){
     resultDiv.style.display="block";
-    resultDiv.innerHTML=`
-        <h3 style="color:#00ff88;">UPLOAD SUCCESSFUL</h3>
+    resultDiv.innerHTML=`<h3 style="color:#00ff88;">UPLOAD SUCCESSFUL</h3>
         <div class="url-box">
             <input type="text" value="${url}" id="urlText" readonly>
             <button class="copy-btn" onclick="copyURL()">COPY</button>
-        </div>
-    `;
+        </div>`;
 }
-
 function showError(msg){
     resultDiv.style.display="block";
     resultDiv.innerHTML=`<h3 style="color:red;">❌ ${msg}</h3>`;
 }
-
 function copyURL(){
     const urlText=document.getElementById("urlText");
     urlText.select();
     document.execCommand("copy");
 }
 </script>
+
 </body>
 </html>
