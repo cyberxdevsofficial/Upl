@@ -77,5 +77,5 @@ app.get('/file/:filename', (req, res) => {
 
 // Start server
 app.listen(port, () => {
-    console.log(`🚀 Self-hosted uploader running on port ${port}`);
+    console.log(`🚀 Anuga Uploader running at http://localhost:${port}`);
 });
