@@ -6,17 +6,15 @@ const os = require('os');
 
 const upload = multer({ dest: os.tmpdir() });
 
-// Vercel API handler
-export const config = {
-  api: {
-    bodyParser: false, // Important: allow multer to handle multipart
-  },
-};
+// Disable default body parsing in Vercel
+export const config = { api: { bodyParser: false } };
 
 export default async function handler(req, res) {
-  if (req.method !== 'POST') return res.status(405).json({ success: false, error: 'Method not allowed' });
+  if (req.method !== 'POST') {
+    return res.status(405).json({ success: false, error: 'Method not allowed' });
+  }
 
-  // Wrap multer in a promise
+  // Wrap multer to handle multipart form
   await new Promise((resolve, reject) => {
     upload.single('file')(req, res, (err) => {
       if (err) reject(err);
@@ -41,13 +39,14 @@ export default async function handler(req, res) {
     const catboxUrl = response.data;
     const filename = catboxUrl.split('/').pop();
 
-    const protocol = req.headers['x-forwarded-proto'] || req.protocol || 'https';
+    const protocol = req.headers['x-forwarded-proto'] || 'https';
     const host = req.headers.host;
 
     const customUrl = `${protocol}://${host}/file/${filename}`;
     res.status(200).json({ success: true, url: customUrl });
   } catch (error) {
     if (fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
+    console.error(error);
     res.status(500).json({ success: false, error: 'Upload failed' });
   }
 }
