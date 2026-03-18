@@ -6,7 +6,7 @@ const os = require('os');
 
 const upload = multer({ dest: os.tmpdir() });
 
-// Disable default body parsing in Vercel
+// Disable default body parsing for multipart
 export const config = { api: { bodyParser: false } };
 
 export default async function handler(req, res) {
@@ -14,7 +14,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ success: false, error: 'Method not allowed' });
   }
 
-  // Wrap multer to handle multipart form
+  // Wrap multer for serverless
   await new Promise((resolve, reject) => {
     upload.single('file')(req, res, (err) => {
       if (err) reject(err);
