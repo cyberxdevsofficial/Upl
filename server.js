@@ -10,25 +10,27 @@ const app = express();
 const port = process.env.PORT || 3000;
 
 const upload = multer({ dest: os.tmpdir() });
+const passwords = {}; // filename => password
+
+app.use(express.urlencoded({ extended: true }));
+app.use(express.json());
 
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-// 1. Upload API (ෆයිල් එක අප්ලෝඩ් කරන කොටස)
+// Upload route
 app.post('/upload', upload.single('file'), async (req, res) => {
     if (!req.file) return res.status(400).json({ success: false, error: 'No file uploaded' });
 
     try {
         const formData = new FormData();
         formData.append('reqtype', 'fileupload');
-        
-        // 🔴 මෙතන තමයි වෙනස කළේ: ෆයිල් එකේ මුල් නමත් එක්කම (Original Name) Catbox එකට යවනවා
         formData.append('fileToUpload', fs.createReadStream(req.file.path), req.file.originalname);
 
         const response = await axios.post('https://catbox.moe/user/api.php', formData, {
             headers: formData.getHeaders(),
-            maxBodyLength: Infinity 
+            maxBodyLength: Infinity
         });
 
         fs.unlinkSync(req.file.path);
@@ -36,60 +38,52 @@ app.post('/upload', upload.single('file'), async (req, res) => {
         const catboxUrl = response.data;
         const filename = catboxUrl.split('/').pop();
 
+        // Optional password
+        if(req.body.password && req.body.password.trim()!==''){
+            passwords[filename] = req.body.password.trim();
+        }
+
         const protocol = req.headers['x-forwarded-proto'] || req.protocol;
         const host = req.get('host');
-        
-        // කෙලින්ම ෆයිල් එකේ ලින්ක් එක දෙනවා
-        const customRaviyaUrl = `${protocol}://${host}/file/${filename}`;
-        res.json({ success: true, url: customRaviyaUrl });
-        
+        const customUrl = `${protocol}://${host}/file/${filename}`;
+
+        res.json({ success: true, url: customUrl });
     } catch (error) {
         if (fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
         res.status(500).json({ success: false, error: 'Upload failed' });
     }
 });
 
-// 2. Direct Media View (ෆොටෝ/වීඩියෝ එක කෙලින්ම පෙන්නන තැන)
+// File route with optional password check
 app.get('/file/:filename', async (req, res) => {
-    try {
-        const filename = req.params.filename;
-        const catboxUrl = `https://files.catbox.moe/${filename}`;
-        
-        const response = await axios({
-            method: 'get',
-            url: catboxUrl,
-            responseType: 'stream'
-        });
+    const filename = req.params.filename;
 
-        let contentType = response.headers['content-type'] || 'application/octet-stream';
-
-        // Extension එක බලලා හරියටම Content-Type එක හදනවා 
-        if (filename.includes('.')) {
-            const ext = filename.split('.').pop().toLowerCase();
-            if (['jpg', 'jpeg'].includes(ext)) contentType = 'image/jpeg';
-            else if (ext === 'png') contentType = 'image/png';
-            else if (ext === 'gif') contentType = 'image/gif';
-            else if (ext === 'webp') contentType = 'image/webp';
-            else if (ext === 'mp4') contentType = 'video/mp4';
-            else if (['mp3', 'm4a'].includes(ext)) contentType = 'audio/mpeg';
+    if(passwords[filename]){
+        const inputPassword = req.query.p;
+        if(!inputPassword || inputPassword !== passwords[filename]){
+            return res.status(401).send(`
+                <html><body style="font-family:sans-serif;text-align:center;margin-top:100px;">
+                <form method="GET">
+                    <p>This file is password protected</p>
+                    <input type="password" name="p" placeholder="Enter password"/>
+                    <button type="submit">Unlock</button>
+                </form>
+                </body></html>
+            `);
         }
+    }
 
-        res.setHeader('Content-Type', contentType);
-        
-        // ඩවුන්ලෝඩ් නොවී Browser එකේම Preview වෙන්න හදනවා (inline)
+    try {
+        const catboxUrl = `https://files.catbox.moe/${filename}`;
+        const response = await axios({ method:'get', url:catboxUrl, responseType:'stream' });
+        res.setHeader('Content-Type', response.headers['content-type'] || 'application/octet-stream');
         res.setHeader('Content-Disposition', `inline; filename="${filename}"`);
-
         response.data.pipe(res);
-        
-    } catch (error) {
+    } catch(err){
         res.status(404).send('❌ File not found!');
     }
 });
 
-module.exports = app;
-
-if (require.main === module) {
-    app.listen(port, () => {
-        console.log(`🚀 Anuga Uploader running on port ${port}`);
-    });
-                                          }
+app.listen(port, () => {
+    console.log(`🚀 Anuga Uploader running`);
+});
